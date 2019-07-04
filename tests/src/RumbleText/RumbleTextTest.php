@@ -2,70 +2,125 @@
 
 use PHPUnit\Framework\TestCase;
 
-use RandomProvider\RandomProvider;
+use RumbleText\RumbleText;
 
-final class RandomProviderTest extends TestCase
+final class RumbleTextTest extends TestCase
 {
     public function testConstruct()
     {
-        $provider = new RandomProvider();
-        $this->assertInstanceOf(RandomProvider::class, $provider);
-        $this->assertEquals(RandomProvider::LETTERSET_ORIGINAL, $provider->letterset);
+        $provider = new RumbleText();
+        $this->assertInstanceOf(RumbleText::class, $provider);
+        $this->assertEquals(RumbleText::LETTERSET_ORIGINAL, $provider->letterset);
         $this->assertEquals('aaaeeeeiioouy', $provider->vowels);
     }
 
     public function testConstructLettersetEqual()
     {
-        $provider = new RandomProvider('equal');
-        $this->assertEquals(RandomProvider::LETTERSET_EQUAL, $provider->letterset);
+        $provider = new RumbleText('equal');
+        $this->assertEquals(RumbleText::LETTERSET_EQUAL, $provider->letterset);
         $this->assertEquals('aeiou', $provider->vowels);
     }
 
     public function testConstructLettersetBaba()
     {
-        $provider = new RandomProvider(RandomProvider::LETTERSET_BABA);
-        $this->assertEquals(RandomProvider::LETTERSET_BABA, $provider->letterset);
+        $provider = new RumbleText(RumbleText::LETTERSET_BABA);
+        $this->assertEquals(RumbleText::LETTERSET_BABA, $provider->letterset);
         $this->assertSame(1, strlen($provider->vowels));
         $this->assertSame(1, count($provider->consonants));
     }
 
     public function testConstructLettersetCaesar()
     {
-        $provider = new RandomProvider(RandomProvider::LETTERSET_CAESAR);
-        $this->assertEquals(RandomProvider::LETTERSET_CAESAR, $provider->letterset);
+        $provider = new RumbleText(RumbleText::LETTERSET_CAESAR);
+        $this->assertEquals(RumbleText::LETTERSET_CAESAR, $provider->letterset);
         $this->assertGreaterThan(2000, strlen($provider->vowels));
     }
 
     public function testConstructLettersetHayden()
     {
-        $provider = new RandomProvider(RandomProvider::LETTERSET_HAYDEN);
-        $this->assertEquals(RandomProvider::LETTERSET_HAYDEN, $provider->letterset);
+        $provider = new RumbleText(RumbleText::LETTERSET_HAYDEN);
+        $this->assertEquals(RumbleText::LETTERSET_HAYDEN, $provider->letterset);
         $this->assertGreaterThan(2000, strlen($provider->vowels));
     }
 
     public function testConstructInvalidLetterset()
     {
         $this->expectException(\Exception::class);
-        $provider = new RandomProvider('foobar');
+        $provider = new RumbleText('foobar');
     }
 
     public function testGenerateRandomString()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
         $result = $provider->generateRandomString();
+        $this->assertEquals(8, strlen($result));
+    }
+
+    public function testGenerateRandomStringInvalidLength()
+    {
+        $provider = new RumbleText();
+        $result = $provider->generateRandomString('');
+        $this->assertEquals('', $result);
+
+        $result = $provider->generateRandomString(1.1);
+        $this->assertEquals('', $result);
+
+        $wat = new \StdClass();
+        $result = $provider->generateRandomString($wat);
+        $this->assertEquals('', $result);
+    }
+
+    public function testGenerateRandomStringWithEmptyString()
+    {
+        $provider = new RumbleText();
+        $result = $provider->generateRandomString(8, '');
+        $this->assertEquals('', $result);
+    }
+
+    public function testGenerateRandomStringWithEmptyArray()
+    {
+        $provider = new RumbleText();
+        $result = $provider->generateRandomString(8, []);
+        $this->assertEquals('', $result);
+    }
+
+    public function testGenerateRandomStringWithArray()
+    {
+        $provider = new RumbleText();
+        $result = $provider->generateRandomString(8, ['x', 'y', 'z']);
+        $this->assertEquals(8, strlen($result));
+
+        $result = $provider->generateRandomString(8, [6, 73, 800]);
+        $this->assertEquals(8, strlen($result));
+    }
+
+    public function testGenerateRandomStringWithNestedArray()
+    {
+        $provider = new RumbleText();
+        $result = $provider->generateRandomString(8, ['x', ['foo' => 'bar'], 'y', 'z']);
+        $this->assertEquals(8, strlen($result));
+    }
+
+    public function testGenerateRandomStringWithObject()
+    {
+        $provider = new RumbleText();
+        $obj = new \StdClass();
+        $obj->set = 'abcd';
+        $obj->group = 'feee';
+        $result = $provider->generateRandomString(8, $obj);
         $this->assertEquals(8, strlen($result));
     }
 
     public function testGenerateRandomStringWithLength()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
         $result = $provider->generateRandomString(2);
         $this->assertEquals(2, strlen($result));
     }
 
     public function testGenerateRandomStringWithLengthAndChars()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
         $result = $provider->generateRandomString(2, 'aa');
         $this->assertEquals(2, strlen($result));
         $this->assertEquals('aa', $result);
@@ -73,7 +128,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomPhrase()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // This will generate a string with 1 to 5 random words in it
         $result = $provider->generateRandomPhrase();
@@ -88,12 +143,12 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomPhraseOnlyOne()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string with only one word
         $result = $provider->generateRandomPhrase(1, 1);
         $this->assertGreaterThan(1, strlen($result));
-        $this->assertLessThan(10, strlen($result));
+        $this->assertLessThan(11, strlen($result));
 
         // First letter must be uppercase
         $first_letter = $result[0];
@@ -103,7 +158,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWord()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord();
@@ -116,7 +171,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWordLength()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord(3);
@@ -129,7 +184,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWordLowercase()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord(5, true);
@@ -142,7 +197,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWordUppercaseFirstLetter()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord(5, true, true);
@@ -155,7 +210,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWordUppercaseAll()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord(5, true, true, true);
@@ -171,7 +226,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWordExactLength()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a string using letterset
         $result = $provider->generateRandomWord(5, true, false, false, true);
@@ -185,7 +240,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomName()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a random name
         $result = $provider->generateRandomName();
@@ -199,7 +254,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomNameMaxlength()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         // Generates a random name
         $result = $provider->generateRandomName(4);
@@ -213,7 +268,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomCompany()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomCompany();
 
@@ -222,7 +277,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomWebsite()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomWebsite();
 
@@ -231,7 +286,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomEmail()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomEmail();
 
@@ -241,7 +296,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomDigits()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomDigits();
 
@@ -250,7 +305,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomDigitsMin()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomDigits(10);
 
@@ -260,7 +315,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomDigitsMinAndMax()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomDigits(10, 100);
 
@@ -271,7 +326,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomDigitsExactLength()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomDigits(0, 0, 52);
 
@@ -281,7 +336,7 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomPhone()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomPhone();
 
@@ -290,9 +345,88 @@ final class RandomProviderTest extends TestCase
 
     public function testGenerateRandomAddress()
     {
-        $provider = new RandomProvider();
+        $provider = new RumbleText();
 
         $result = $provider->generateRandomAddress();
         $this->assertContains(' ', $result);
+    }
+
+    public function testSeed()
+    {
+        // After seeding, the results should be the same
+        $provider = new RumbleText();
+        $provider->seed(1);
+        $first = $provider->generateRandomString();
+        $second = $provider->generateRandomString();
+
+        $provider = new RumbleText();
+        $provider->seed(1);
+        $third = $provider->generateRandomString();
+        $fourth = $provider->generateRandomString();
+        $this->assertEquals($first, $third);
+        $this->assertEquals($second, $fourth);
+
+        // After making a new object and not reseeding, it should not be the
+        // same as before
+        $provider = new RumbleText();
+        $fifth = $provider->generateRandomString();
+        $this->assertNotEquals($fifth, $first);
+    }
+
+    public function testImplodeRecur()
+    {
+        $f = ['a', 'b'];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('ab', $r);
+
+        $f = ['foo' => 'bar'];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('bar', $r);
+
+        $f = ['a', 'b', ['foo' => 'bar'], 'c'];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('abbarc', $r);
+
+        $f = ['a', 'b', ['foo' => ['x', 'y', 'bar']], 'c'];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('abxybarc', $r);
+
+        $f = ['aa', 'bb', ['foo' => ['xx', 'yy', 'bar']], 'cc'];
+        $r = RumbleText::implode_recur('-', $f);
+        $this->assertEquals('aa-bb-xx-yy-bar-cc', $r);
+
+        $f = 1;
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('1', $r);
+
+        $f = [1, 3, 800];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('13800', $r);
+
+        $f = [0.1, 0.66, 0.5, 'a'];
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('0.10.660.5a', $r);
+
+        $f = new \StdClass();
+        $f->foo = 'bat';
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('bat', $r);
+
+        $s = new \StdClass();
+        $s->type = 'classy';
+        $f = new \StdClass();
+        $f->name = 'Susan';
+        $f->verb = 'is';
+        $f->sub = $s;
+        $r = RumbleText::implode_recur(' ', $f);
+        $this->assertEquals('Susan is classy', $r);
+
+        $f = new \ArrayIterator([1, 2, 3]);
+        $r = RumbleText::implode_recur('', $f);
+        $this->assertEquals('123', $r);
+
+        $f = function() { return 1; };
+        $r = RumbleText::implode_recur('', $f());
+        $this->assertEquals('1', $r);
     }
 }

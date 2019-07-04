@@ -1,17 +1,17 @@
 <?php
 /**
- * @package RandomProvider
+ * @package RumbleText
  */
 
-namespace RandomProvider;
+namespace RumbleText;
 
 /**
- * RandomProvider
+ * RumbleText
  *
- * @package RandomProvider
+ * @package RumbleText
  * @author Jansen Price <jansen.price@gmail.com>
  */
-class RandomProvider
+class RumbleText
 {
     const LETTERSET_ORIGINAL = 'original';
     const LETTERSET_EQUAL = 'equal';
@@ -47,9 +47,21 @@ class RandomProvider
      * @param string $letterset
      * @return void
      */
-    public function __construct($letterset = 'original')
+    public function __construct($letterset = self::LETTERSET_ORIGINAL)
     {
         $this->useLetterset($letterset);
+    }
+
+    /**
+     * Seed the random generator
+     *
+     * @param int $input
+     * @return self
+     */
+    public function seed(int $input)
+    {
+        mt_srand($input);
+        return $this;
     }
 
     /**
@@ -65,12 +77,12 @@ class RandomProvider
             $this->vowels     = 'aaaeeeeiioouy';
             $this->consonants = 'bbbccddffghkjlmmmnnnppprrrrsssssttttvwz';
             break;
-        case 'equal':
+        case self::LETTERSET_EQUAL:
             // Probability of all vowels and consonants equal
             $this->vowels     = 'aeiou';
             $this->consonants = 'bcdfghjklmnpqrstvwxyz';
             break;
-        case 'baba':
+        case self::LETTERSET_BABA:
             // This letter set picks 1 random vowel and 1 random consonant
             // and those two letters will be used as the letter set
             $vlist = 'aeiou';
@@ -79,7 +91,7 @@ class RandomProvider
             $this->vowels     = $vlist[mt_rand(0, 4)];
             $this->consonants = $clist[mt_rand(0, 20)];
             break;
-        case 'caesar':
+        case self::LETTERSET_CAESAR:
             // This is based on the frequency that letters occur in the
             // English language (from the man page of caesar)
             $this->vowels = str_repeat('e', 1300)
@@ -112,7 +124,7 @@ class RandomProvider
                 .str_repeat('z', 7);
 
             break;
-        case 'hayden':
+        case self::LETTERSET_HAYDEN:
             // This is based on a paper of the phoneme count by Rebecca
             // Hayden
             $this->vowels = str_repeat('a', 996 + 309 + 180 + 146)
@@ -172,12 +184,22 @@ class RandomProvider
      */
     public function generateRandomString($length = 8, $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_')
     {
-        $string = '';
-
-        for ($i = 0; $i < $length; ++$i) {
-            $string .= $characters[mt_rand(0, strlen($characters) - 1)];
+        if (!is_int($length)) {
+            return '';
         }
 
+        if (is_array($characters) || is_object($characters)) {
+            $characters = static::implode_recur('', $characters);
+        }
+
+        if (strlen($characters) < 1) {
+            return '';
+        }
+
+        $string = '';
+        for ($i = 0; $i < $length; $i++) {
+            $string .= $characters[mt_rand(0, strlen($characters) - 1)];
+        }
         return $string;
     }
 
@@ -398,5 +420,35 @@ class RandomProvider
             $this->generateRandomWord($length, false, true),
             $roads[mt_rand(0, count($roads) - 1)]
         );
+    }
+
+    /**
+     * Utility function to convert a nested array to a string
+     *
+     * @param mixed $glue
+     * @param mixed $input
+     * @return void
+     */
+    public static function implode_recur($glue, $input)
+    {
+        $out = [];
+
+        if (is_object($input)) {
+            $input = (array) $input;
+        }
+
+        if (is_iterable($input)) {
+            foreach ($input as $item) {
+                if (is_array($item) || is_object($item)) {
+                    $out[] = self::implode_recur($glue, $item);
+                } else {
+                    $out[] = $item;
+                }
+            }
+        } else {
+            $out[] = $input;
+        }
+
+        return implode($glue, $out);
     }
 }

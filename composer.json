@@ -1,5 +1,5 @@
 {
-    "name": "sumpygump/random-provider",
+    "name": "sumpygump/rumble-text",
     "description": "Create random strings",
     "type": "library",
     "license": "MIT",
@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "RandomProvider\\": "src/RandomProvider"
+            "RumbleText\\": "src/RumbleText"
         }
     }
 }
