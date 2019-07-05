@@ -18,6 +18,7 @@ class RumbleText
     const LETTERSET_BABA = 'baba';
     const LETTERSET_CAESAR = 'caesar';
     const LETTERSET_HAYDEN = 'hayden';
+    const LETTERSET_PARSELTONGUE = 'parseltongue';
 
     /**
      * Current letterset
@@ -81,6 +82,11 @@ class RumbleText
             // Probability of all vowels and consonants equal
             $this->vowels     = 'aeiou';
             $this->consonants = 'bcdfghjklmnpqrstvwxyz';
+            break;
+        case self::LETTERSET_PARSELTONGUE:
+            // Not a very good approximation of parseltongue
+            $this->vowels     = 'aaaaaaiiiiiieu';
+            $this->consonants = 'ssssshhhhhtf';
             break;
         case self::LETTERSET_BABA:
             // This letter set picks 1 random vowel and 1 random consonant
@@ -210,7 +216,7 @@ class RumbleText
      * @param int $max Maximum word count
      * @return string
      */
-    public function generateRandomPhrase($min = 1, $max = 5)
+    public function generateRandomPhrase($min = 1, $max = 5, $as_array = false)
     {
         $wordcount = mt_rand($min, $max);
 
@@ -219,7 +225,142 @@ class RumbleText
             $words[] = $this->generateRandomWord(mt_rand(2, 8));
         }
 
+        // First word capitalized
+        $words[0] = ucfirst($words[0]);
+
+        if ($as_array) {
+            return $words;
+        }
+
         return ucfirst(implode(' ', $words));
+    }
+
+    /**
+     * Generate a random phrase
+     *
+     * @param int $min Minimum word count
+     * @param int $max Maximum word count
+     * @return string
+     */
+    public function generateRandomSentence($min = 1, $max = 20, $as_array = false)
+    {
+        $sentence = $this->generateRandomPhrase($min, $max, true);
+
+        // Determine terminator of sentence
+        $punctuation = '........!?';
+        $selected_punctuation = $punctuation[mt_rand(0, strlen($punctuation) - 1)];
+        $last_word = count($sentence) - 1;
+        $sentence[$last_word] = $sentence[$last_word] . $selected_punctuation;
+
+        // Insert a comma somewhere in the sentence?
+        $should_insert_comma = static::randomChance(0.25);
+        if ($should_insert_comma && count($sentence) > 1) {
+            $comma = mt_rand(0, count($sentence) - 2);
+            $sentence[$comma] = $sentence[$comma] . ",";
+        }
+
+        // Put some words in quotes?
+        $should_insert_quotes = static::randomChance(0.1);
+        if ($should_insert_quotes) {
+            $first = mt_rand(0, count($sentence) - 1);
+            $last = mt_rand($first, count($sentence) - 1);
+            $sentence[$first] = '"' . $sentence[$first];
+            $ending = ($last == count($sentence) - 1) ? '"' : ',"';
+            $sentence[$last] = $sentence[$last] . $ending;
+        }
+
+        if ($as_array) {
+            return $sentence;
+        }
+
+        return implode(' ', $sentence);
+    }
+
+    /**
+     * Generate a random paragraph
+     *
+     * @param int $min Minimum sentence count
+     * @param int $max Maximum sentence count
+     * @return string
+     */
+    public function generateRandomParagraph($min = 1, $max = 20, $exact_wordcount = null, $as_array = false)
+    {
+        $sentencecount = mt_rand($min, $max);
+        $min_sentence_words = ($exact_wordcount) ? floor($exact_wordcount / $sentencecount) : 1;
+        $max_sentence_words = 20;
+
+        if ($min_sentence_words > $max_sentence_words) {
+            $max_sentence_words = floor($min_sentence_words * 1.5);
+        }
+
+        $sentences = [];
+        for ($i = 0; $i < $sentencecount; $i++) {
+            $sentences[] = $this->generateRandomSentence($min_sentence_words, $max_sentence_words, true);
+        }
+
+        // Flatten all the words
+        $paragraph = [];
+        foreach ($sentences as $sentence) {
+            foreach ($sentence as $word) {
+                $paragraph[] = $word;
+            }
+        }
+
+        if ($exact_wordcount) {
+            // To enforce a specific word count of the paragraph
+            $paragraph = array_slice($paragraph, 0, $exact_wordcount);
+            $last_word = count($paragraph) - 1;
+            $paragraph[$last_word] = $paragraph[$last_word] . ".";
+        }
+
+        if ($as_array) {
+            return $paragraph;
+        }
+
+        return implode(' ', $paragraph);
+    }
+
+    /**
+     * Generate a set of random paragraphs
+     *
+     * @param int $min
+     * @param int $max
+     * @return void
+     */
+    public function generateRandomArticle($min = 1, $max = 8, $exact_wordcount = null)
+    {
+        if ($exact_wordcount) {
+            // Just keep making paragraphs until we have enough words
+            $words = [];
+            while (count($words) < $exact_wordcount) {
+                $paragraph = $this->generateRandomParagraph(1, 20, null, true);
+                $paragraph[] = "\n\n";
+                $words = array_merge($words, $paragraph);
+            }
+
+            // Trim to match the desired word count
+            $words = array_slice($words, 0, $exact_wordcount);
+            $last_word = count($words) - 1;
+            $last_letter = substr($words[$last_word], -1);
+            if ($last_letter == ',') {
+                $words[$last_word] = substr($words[$last_word], 0, -2) . ".";
+            }
+            if ($last_letter != '.' && $last_letter != ',') {
+                $words[$last_word] = $words[$last_word] . ".";
+            }
+
+            // Gotta replace those newlines next to spaces
+            return str_replace("\n ", "\n", trim(implode(' ', $words)));
+        }
+
+        $paragraphcount = mt_rand($min, $max);
+
+        $paragraphs = [];
+        for ($i = 0; $i < $paragraphcount; $i++) {
+            $paragraphs[] = $this->generateRandomParagraph();
+        }
+
+        return implode("\n\n", $paragraphs);
     }
 
     /**
@@ -420,6 +561,38 @@ class RumbleText
             $this->generateRandomWord($length, false, true),
             $roads[mt_rand(0, count($roads) - 1)]
         );
+    }
+
+    /**
+     * Generate a random chance (bool) based off probability
+     *
+     * @param float $probability
+     * @return bool
+     */
+    public static function randomChance(float $probability = 0.5)
+    {
+        $probability = abs($probability);
+
+        // Expected input to be between 0.0 and 1.0
+        // If it is out of that range, tone it down
+        while ($probability > 1) {
+            $probability = $probability / 10;
+        }
+
+        // Scale up to make an array that fits the probability
+        $scale = 10;
+        $scaled_prob = $probability * $scale;
+        while (fmod($scaled_prob, 1) > 0 && $scale < 10000) {
+            $scale = $scale * 10;
+            $scaled_prob = $probability * $scale;
+        }
+
+        $opts_false = array_fill(0, $scale - $scaled_prob, false);
+        $opts_true = array_fill(0, $scaled_prob, true);
+
+        $opts = array_merge($opts_false, $opts_true);
+
+        return $opts[mt_rand(0, count($opts) - 1)];
     }
 
     /**

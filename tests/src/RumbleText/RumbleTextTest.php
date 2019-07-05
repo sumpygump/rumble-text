@@ -43,6 +43,13 @@ final class RumbleTextTest extends TestCase
         $this->assertGreaterThan(2000, strlen($provider->vowels));
     }
 
+    public function testConstructLettersetParseltongue()
+    {
+        $provider = new RumbleText(RumbleText::LETTERSET_PARSELTONGUE);
+        $this->assertEquals(RumbleText::LETTERSET_PARSELTONGUE, $provider->letterset);
+        $this->assertEquals('aaaaaaiiiiiieu', $provider->vowels);
+    }
+
     public function testConstructInvalidLetterset()
     {
         $this->expectException(\Exception::class);
@@ -154,6 +161,125 @@ final class RumbleTextTest extends TestCase
         $first_letter = $result[0];
         $this->assertGreaterThan(ord('A') - 1, ord($first_letter));
         $this->assertLessThan(ord('Z') + 1, ord($first_letter));
+    }
+
+    public function testGenerateRandomPhraseAsArray()
+    {
+        $provider = new RumbleText();
+
+        // Generates a string with only one word
+        $result = $provider->generateRandomPhrase(1, 1, true);
+        $this->assertTrue(is_array($result));
+        $this->assertEquals(1, count($result));
+    }
+
+    public function testGenerateRandomSentence()
+    {
+        $provider = new RumbleText();
+
+        // Generates a random sentence
+        $result = $provider->generateRandomSentence();
+        $this->assertEquals(ucfirst($result), $result);
+
+        // Make a bunch of sentences to ensure no errors with the probabilities
+        // baked in (commas, quotes)
+        for ($i = 0; $i < 25; $i++) {
+            $result = $provider->generateRandomSentence();
+        }
+    }
+
+    public function testGenerateRandomSentenceAsArray()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomSentence(1, 10, true);
+        $this->assertTrue(is_array($result));
+    }
+
+    public function testGenerateRandomParagraph()
+    {
+        $provider = new RumbleText();
+
+        // Generates a string using letterset
+        $result = $provider->generateRandomParagraph();
+        $this->assertEquals(ucfirst($result), $result);
+        $this->assertContains(' ', $result);
+    }
+
+    public function testGenerateRandomParagraphMinMax()
+    {
+        $provider = new RumbleText();
+
+        // Generates a string using letterset
+        $result = $provider->generateRandomParagraph(1, 10);
+        $this->assertEquals(ucfirst($result), $result);
+        $this->assertContains(' ', $result);
+    }
+
+    public function testGenerateRandomParagraphExactWordcount()
+    {
+        $provider = new RumbleText();
+
+        // Generates a string using letterset
+        $result = $provider->generateRandomParagraph(1, 6, 50);
+        $this->assertEquals(ucfirst($result), $result);
+        $this->assertContains(' ', $result);
+    }
+
+    public function testGenerateRandomParagraphExactWordcountLarge()
+    {
+        $provider = new RumbleText();
+
+        // Getting 150 words out of 1 to 2 sentences is difficult
+        $result = $provider->generateRandomParagraph(1, 2, 150);
+        $this->assertEquals(ucfirst($result), $result);
+        $this->assertContains(' ', $result);
+    }
+
+    public function testGenerateRandomParagraphAsArray()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomParagraph(1, 7, null, true);
+        $this->assertTrue(is_array($result));
+    }
+
+    public function testGenerateRandomParagraphExactWordcountAndAsArray()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomParagraph(1, 7, 10, true);
+        $this->assertTrue(is_array($result));
+        $this->assertEquals(10, count($result));
+    }
+
+    public function testGenerateRandomArticle()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomArticle();
+        $this->assertEquals(ucfirst($result), $result);
+    }
+
+    public function testGenerateRandomArticleMinMax()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomArticle(1, 1);
+        $this->assertEquals(ucfirst($result), $result);
+    }
+
+    public function testGenerateRandomArticleExactWords()
+    {
+        $provider = new RumbleText();
+
+        $result = $provider->generateRandomArticle(1, 1, 100);
+        $this->assertEquals(ucfirst($result), $result);
+
+        // Generate some more to ensure no errors with probabilities
+        for ($i = 0; $i < 25; $i++) {
+            $result = $provider->generateRandomArticle(1, 10, 5);
+        }
     }
 
     public function testGenerateRandomWord()
@@ -371,6 +497,64 @@ final class RumbleTextTest extends TestCase
         $provider = new RumbleText();
         $fifth = $provider->generateRandomString();
         $this->assertNotEquals($fifth, $first);
+    }
+
+    public function testRandomChance()
+    {
+        // probability 1 is always true
+        $result = RumbleText::randomChance(1);
+        $this->assertTrue($result);
+
+        // probability 0 is always false
+        $result = RumbleText::randomChance(0);
+        $this->assertFalse($result);
+
+        // With a fifty-fifty chance we should get around 50
+        $true_count = 0;
+        for ($i = 0; $i <= 100; $i++) {
+            $result = RumbleText::randomChance();
+            if ($result) {
+                $true_count++;
+            }
+        }
+        $this->assertGreaterThan(45, $true_count);
+        $this->assertLessThan(55, $true_count);
+
+        // Try some variations of probability
+        $result = RumbleText::randomChance(0.1);
+        $this->assertTrue(is_bool($result));
+
+        // Try some variations of probability
+        $result = RumbleText::randomChance(0.01);
+        $this->assertTrue(is_bool($result));
+
+        // Try some variations of probability
+        $result = RumbleText::randomChance(0.001);
+        $this->assertTrue(is_bool($result));
+
+        // What if it is bigger than 1?
+        // It should scale appropriately - this assumes 2 out of 10
+        $result = RumbleText::randomChance(2);
+        $this->assertTrue(is_bool($result));
+
+        // This assumes 20%
+        $result = RumbleText::randomChance(20);
+        $this->assertTrue(is_bool($result));
+
+        // This assumes 100%
+        $result = RumbleText::randomChance(100);
+        $this->assertTrue($result);
+
+        // What about a negative number?
+        $result = RumbleText::randomChance(-1);
+        $this->assertTrue($result);
+
+        $result = RumbleText::randomChance(-100);
+        $this->assertTrue($result);
+
+        // What about a string?
+        $this->expectException(\TypeError::class);
+        $result = RumbleText::randomChance("a");
     }
 
     public function testImplodeRecur()

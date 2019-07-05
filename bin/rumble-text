@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use RumbleText\RumbleText;
+
+$rumble = new RumbleText();
+
+$word_count = isset($argv[1]) ? (int) $argv[1] : 16;
+
+$words = $rumble->generateRandomArticle(1, 20, $word_count);
+printf("%s\n", wordwrap($words));
+
+exit(0);
