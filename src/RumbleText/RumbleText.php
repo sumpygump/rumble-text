@@ -20,6 +20,15 @@ class RumbleText
     const LETTERSET_HAYDEN = 'hayden';
     const LETTERSET_PARSELTONGUE = 'parseltongue';
 
+    public static $lettersets = [
+        self::LETTERSET_ORIGINAL,
+        self::LETTERSET_EQUAL,
+        self::LETTERSET_BABA,
+        self::LETTERSET_CAESAR,
+        self::LETTERSET_HAYDEN,
+        self::LETTERSET_PARSELTONGUE,
+    ];
+
     /**
      * Current letterset
      *
@@ -457,6 +466,10 @@ class RumbleText
      */
     public function generateRandomName($maxlength = 10)
     {
+        if (null == $maxlength) {
+            $maxlength = 10;
+        }
+
         $length = mt_rand(1, $maxlength);
         return $this->generateRandomWord($length, false, true, false, true);
     }
@@ -469,6 +482,10 @@ class RumbleText
      */
     public function generateRandomCompany($maxwords = 2)
     {
+        if (null == $maxwords) {
+            $maxwords = 2;
+        }
+
         $suffixes = array('Inc.', 'Enterprises', 'Corporation', 'LLC.');
 
         $wordcount = mt_rand(1, $maxwords);

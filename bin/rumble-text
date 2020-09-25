@@ -5,11 +5,166 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use RumbleText\RumbleText;
 
-$rumble = new RumbleText();
+$types = [
+    'string',
+    'phrase',
+    'sentence',
+    'paragraph',
+    'article',
+    'word',
+    'name',
+    'company',
+    'website',
+    'email',
+    'digits',
+    'phone',
+    'address',
+];
 
-$word_count = isset($argv[1]) ? (int) $argv[1] : 16;
+/**
+ * Very simple arg parsing logic
+ */
+function parse_args($args, $types)
+{
+    $args = json_decode(json_encode($args));
+    $settings = [
+        'word_count' => null,
+        'letterset' => RumbleText::LETTERSET_ORIGINAL,
+        'type' => 'article',
+    ];
 
-$words = $rumble->generateRandomArticle(1, 20, $word_count);
+    $program_name = array_shift($args);
+    while (!empty($args)) {
+        $arg = array_shift($args);
+
+        if ($arg == '--help') {
+            print "Rumble-text generates random text.\n";
+            print "Usage: rumble-text [--letterset <letterset>] [--type <type>] [--chars <chars>] [wordcount|length]\n";
+            print "  --letterset allows to select algorithm for probabilities of vowels and consonants to use\n";
+            print "  --type allows to pick what type of entity to produce (whether string, word, name, paragraph, etc.)\n";
+            print "  --chars is only used for type 'string', the format is a string of chars to pick from. e.g. --chars abcdef012\n";
+            print "  some types use wordcount to output a certain number of words, and some types use length to specify character length\n";
+            printf("\nValid lettersets:\n - %s\n", implode("\n - ", RumbleText::$lettersets));
+            printf("\nValid types:\n - %s\n", implode("\n - ", $types));
+            exit(0);
+        }
+
+        if ($arg == '--letterset' || $arg == '-l') {
+            if (!isset($args[0])) {
+                throw new \Exception(sprintf("Missing argument for option %s", $arg));
+            }
+            $settings['letterset'] = array_shift($args);
+            if (!in_array($settings['letterset'], RumbleText::$lettersets)) {
+                printf("Invalid letterset specified '%s'\n", $settings['letterset']);
+                printf("Valid lettersets:\n - %s\n", implode("\n - ", RumbleText::$lettersets));
+                exit(1);
+            }
+            continue;
+        }
+
+        if ($arg == '--type' || $arg == '-t') {
+            if (!isset($args[0])) {
+                throw new \Exception(sprintf("Missing argument for option %s", $arg));
+            }
+            $settings['type'] = array_shift($args);
+            if (!in_array($settings['type'], $types)) {
+                printf("Invalid type specified '%s'\n", $settings['type']);
+                printf("Valid types:\n - %s\n", implode("\n - ", $types));
+                exit(1);
+            }
+            continue;
+        }
+
+        if ($arg == '--chars' || $arg == '-c') {
+            if (!isset($args[0])) {
+                throw new \Exception(sprintf("Missing argument for option %s", $arg));
+            }
+            $settings['chars'] = array_shift($args);
+            continue;
+        }
+
+        if ($arg[0] == '-' && (isset($arg[1]) && $arg[1] == '-')) {
+            printf("Unexpected option '%s'\n", $arg);
+            exit(1);
+        }
+
+        if ($arg[0] == '-') {
+            printf("Unexpected flag '%s'\n", $arg);
+            exit(1);
+        }
+
+        $settings['word_count'] = (int) $arg;
+    }
+
+    return $settings;
+}
+
+$settings = parse_args($argv, $types);
+
+$rumble = new RumbleText($settings['letterset']);
+
+switch ($settings['type']) {
+case 'string':
+    $length = $settings['word_count'] ?? 16;
+    if (isset($settings['chars'])) {
+        $words = $rumble->generateRandomString($length, $settings['chars']);
+    } else {
+        $words = $rumble->generateRandomString($length);
+    }
+    break;
+case 'phrase':
+    if ($settings['word_count']) {
+        $words = $rumble->generateRandomPhrase($settings['word_count'], $settings['word_count']);
+    } else {
+        $words = $rumble->generateRandomPhrase();
+    }
+    break;
+case 'sentence':
+    if ($settings['word_count']) {
+        $words = $rumble->generateRandomSentence($settings['word_count'], $settings['word_count']);
+    } else {
+        $words = $rumble->generateRandomSentence();
+    }
+    break;
+case 'paragraph':
+    $word_count = $settings['word_count'] ?? null;
+    $words = $rumble->generateRandomParagraph(1, 20, $word_count);
+    break;
+case 'article':
+    $word_count = $settings['word_count'] ?? 32;
+    $words = $rumble->generateRandomArticle(1, 20, $word_count);
+    break;
+case 'word':
+    $words = $rumble->generateRandomWord($settings['word_count']);
+    break;
+case 'name':
+    $words = $rumble->generateRandomName($settings['word_count']);
+    break;
+case 'company':
+    print_r($settings);
+    $words = $rumble->generateRandomCompany($settings['word_count']);
+    break;
+case 'website':
+    $words = $rumble->generateRandomWebsite();
+    break;
+case 'email':
+    $words = $rumble->generateRandomEmail();
+    break;
+case 'number': // passthru
+case 'digits':
+    if ($settings['word_count']) {
+        $words = $rumble->generateRandomDigits(4, 16, $settings['word_count']);
+    } else {
+        $words = $rumble->generateRandomDigits();
+    }
+    break;
+case 'phone':
+    $words = $rumble->generateRandomPhone();
+    break;
+case 'address':
+    $words = $rumble->generateRandomAddress();
+    break;
+}
 printf("%s\n", wordwrap($words));
 
 exit(0);
