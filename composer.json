@@ -1,6 +1,6 @@
 {
     "name": "sumpygump/rumble-text",
-    "description": "Create random strings",
+    "description": "Generate random text. Strings, digits, words, phrases, sentences, etc. To be used as placeholder text.",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -12,6 +12,9 @@
     "require-dev": {
         "phpunit/phpunit": "7.*"
     },
+    "bin": [
+        "bin/rumble-text"
+    ],
     "autoload": {
         "psr-4": {
             "RumbleText\\": "src/RumbleText"
