@@ -1,7 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace RumbleText\Tests;
 
+use PHPUnit\Framework\TestCase;
 use RumbleText\RumbleText;
 
 final class RumbleTextTest extends TestCase
@@ -203,7 +204,7 @@ final class RumbleTextTest extends TestCase
         // Generates a string using letterset
         $result = $provider->generateRandomParagraph();
         $this->assertEquals(ucfirst($result), $result);
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testGenerateRandomParagraphMinMax()
@@ -213,7 +214,7 @@ final class RumbleTextTest extends TestCase
         // Generates a string using letterset
         $result = $provider->generateRandomParagraph(1, 10);
         $this->assertEquals(ucfirst($result), $result);
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testGenerateRandomParagraphExactWordcount()
@@ -223,7 +224,7 @@ final class RumbleTextTest extends TestCase
         // Generates a string using letterset
         $result = $provider->generateRandomParagraph(1, 6, 50);
         $this->assertEquals(ucfirst($result), $result);
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testGenerateRandomParagraphExactWordcountLarge()
@@ -233,7 +234,7 @@ final class RumbleTextTest extends TestCase
         // Getting 150 words out of 1 to 2 sentences is difficult
         $result = $provider->generateRandomParagraph(1, 2, 150);
         $this->assertEquals(ucfirst($result), $result);
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testGenerateRandomParagraphAsArray()
@@ -398,7 +399,7 @@ final class RumbleTextTest extends TestCase
 
         $result = $provider->generateRandomCompany();
 
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testGenerateRandomWebsite()
@@ -407,7 +408,7 @@ final class RumbleTextTest extends TestCase
 
         $result = $provider->generateRandomWebsite();
 
-        $this->assertContains('.', $result);
+        $this->assertStringContainsString('.', $result);
     }
 
     public function testGenerateRandomEmail()
@@ -416,8 +417,8 @@ final class RumbleTextTest extends TestCase
 
         $result = $provider->generateRandomEmail();
 
-        $this->assertContains('@', $result);
-        $this->assertContains('.', $result);
+        $this->assertStringContainsString('@', $result);
+        $this->assertStringContainsString('.', $result);
     }
 
     public function testGenerateRandomDigits()
@@ -466,7 +467,7 @@ final class RumbleTextTest extends TestCase
 
         $result = $provider->generateRandomPhone();
 
-        $this->assertContains('-', $result);
+        $this->assertStringContainsString('-', $result);
     }
 
     public function testGenerateRandomAddress()
@@ -474,7 +475,7 @@ final class RumbleTextTest extends TestCase
         $provider = new RumbleText();
 
         $result = $provider->generateRandomAddress();
-        $this->assertContains(' ', $result);
+        $this->assertStringContainsString(' ', $result);
     }
 
     public function testSeed()
@@ -609,7 +610,9 @@ final class RumbleTextTest extends TestCase
         $r = RumbleText::implode_recur('', $f);
         $this->assertEquals('123', $r);
 
-        $f = function() { return 1; };
+        $f = function () {
+            return 1;
+        };
         $r = RumbleText::implode_recur('', $f());
         $this->assertEquals('1', $r);
     }
