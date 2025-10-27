@@ -34,6 +34,7 @@ $types = [
     'paragraph',
     'article',
     'word',
+    'syllable',
     'name',
     'company',
     'website',
@@ -158,6 +159,15 @@ case 'article':
     break;
 case 'word':
     $words = $rumble->generateRandomWord($settings['word_count']);
+    break;
+case 'syllable':
+    $length = $settings['word_count'] ?? 1;
+    $types = ["V", "CV", "VC", "CVC"];
+    $words = '';
+    for ($i = 0; $i < $length; $i++) {
+        $type = $types[mt_rand(0, count($types)-1)];
+        $words .= $rumble->generateSyllable($type) . ' ';
+    }
     break;
 case 'name':
     $words = $rumble->generateRandomName($settings['word_count']);

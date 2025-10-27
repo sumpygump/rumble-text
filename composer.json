@@ -10,7 +10,8 @@
         }
     ],
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": "*",
+        "phpstan/phpstan": "^1.11"
     },
     "bin": [
         "bin/rumble-text"
